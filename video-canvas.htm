@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>PIP via html5!</title>
+
+</head>
+<body style="background-color:#808080" >
+<div>
+  
+  <img style="position:absolute;top:320px;left:0px" src="images/livedemo_slider_bg.png" width="419" height="66" alt="" border="0"> 
+	<div width="600px" height="400px" id="gridbox" style="width:600px;height:400px;position:absolute;top:320px;left:0px">  <input style="width:50px;position:absolute;top:18px;left:15px;font-size:16px;" type="button" id="play" value="play" onclick="playvideo();"><input type="text" id="sliderlocation" style="width:37px;position:absolute;top:22px;left:74px;font-size:12px;" value="0" "> <div id="sliderBox1" style="position:absolute;top:24px;left:125px;"></div>  </div>  
+	<video style="position:absolute;left:0px;top:0px;" height="320" width="410"  id="two">
+    <source src="dizzy2.ogv" />
+  </video>
+  <video style="position:absolute;left:240px;top:200px;opacity:0.6;filter:alpha(opacity=60)" height="120" width="160"  id="one">
+    <source src="Big_Buck_Bunny_small.ogv" />
+  </video>
+  
+</div>
+
+ 
+  
+<link rel="STYLESHEET" type="text/css" href="codebase/dhtmlxslider.css?build=100722">
+<script src="codebase/dhtmlxcommon.js?build=100722" type="text/javascript"></script> 
+<script src="codebase/dhtmlxslider.js?build=100722" type="text/javascript"></script>
+<script>
+
+var video = document.querySelector('#one'),
+    video2 = document.querySelector('#two');
+	
+	//video.playbackRate = .5;
+	//video2.playbackRate = .5;
+	
+	var videoSmallTop, videoSmallLeft, videoSmallWidth, videoSmallHeight;
+
+  
+  var mouseXOrig = 0, mouseYOrig = 0, mousedown = false, dragging = false, xOffset = 0, yOffset = 0, largesize = false;
+  
+  video.onmousedown = function( event ) {
+		mouseXOrig = event.clientX;
+		mouseYOrig = event.clientY;
+		mousedown = true;
+		
+  };
+  
+  document.onselectstart = function() { return false; }
+  
+  document.onmousedown = function( event ) {
+  
+  if ( mousedown == false )
+  {
+	if (( event.clientX >= video.offsetLeft && event.clientX < video.offsetLeft + video.width) &&
+		 (event.clientY >= video.offsetLeft && event.clientY < video.offsetTop + video.height))
+	{
+		mousedown = true;
+	}
+	}
+	
+	return false;
+  }
+
+  video.onmouseup = function( event ) {
+  
+        if ( dragging == false && mousedown == true )
+			makeLarge();
+			
+		mousedown = false;
+		dragging = false;
+  };
+
+  document.onmouseup = function( event ) {
+  if ( dragging == false && mousedown == true )
+			makeLarge();
+        dragging = false;
+		mousedown = false;
+		};
+		
+  document.onmousemove = function( event ) {
+
+  if ( mousedown )
+  {
+	if ( dragging == false )
+	{
+  		if (( Math.abs( mouseXOrig - event.clientX ) > 5 ) && ( Math.abs( mouseXOrig - event.clientY ) > 5 ))
+		{
+		    xOffset = video.offsetLeft - event.clientX;
+			yOffset = video.offsetTop - event.clientY;
+			dragging = true;
+		}
+	}
+	
+   }
+
+   if ( dragging )
+	{
+	    //alert( "dragging" );
+		video.style.top = ( event.clientY + yOffset) + "px";
+		video.style.left = ( event.clientX + xOffset ) + "px";
+	
+  	}
+  };
+  
+  video.addEventListener('play', function() { 
+  video2.play();
+  });
+
+  video.addEventListener('ended', function() { 
+  video2.pause();
+  video2.currentTime = 0;
+  video.currentTime = 0;
+  updateSlider();
+  });
+
+  video2.addEventListener('ended', function() { 
+  video.pause();
+  video2.currentTime = 0;
+  video.currentTime = 0;
+  updateSlider();
+  });
+
+  video.addEventListener('pause', function() { 
+  video2.pause();
+  });
+  
+  function playvideo() {
+	  
+		if (video.paused) {
+		video2.currentTime = video.currentTime;
+		  
+	      video.play();
+		} else {
+		  video.pause();
+		}
+		
+	};
+  
+  function makeLarge()
+  {
+    if ( largesize ) {
+		video.style.left = videoSmallLeft;
+		video.style.top = videoSmallTop;
+		video.style.width = videoSmallWidth;
+		video.style.height = videoSmallHeight;
+		largesize = false;
+	}
+	else
+	{
+		videoSmallTop = video.style.top;
+		videoSmallLeft = video.style.left;
+		videoSmallWidth = video.style.width;
+		videoSmallHeight = video.style.height;
+		video.style.left = "5px";
+		video.style.top = "5px";
+		video.style.width = "" + (video2.width - 10) + "px";
+		video.style.height = "" + (video2.height - 10) + "px";
+		largesize = true;
+	}
+  
+  }
+
+///////////////////////////////////////////////////////////////////////
+// SLIDER CODE!!  
+
+var slider2;
+function doLoadLiveDemo(){
+slider2=new dhtmlxSlider("sliderBox1",260,"dhx_skyblue");
+slider2.setImagePath("codebase/imgs/");
+slider2.attachEvent("onChange",function(nv){updateSlider(nv);});
+slider2.setMax(100);
+slider2.init();
+};
+
+function updateSlider(val){
+
+var minVal = Math.min(video.duration,video2.duration);
+video.currentTime = Math.min( minVal * val / 100.0, minVal - .5 ); //seeking to the very end starts playing again in firefox
+video2.currentTime = video.currentTime;
+
+updateTime();
+
+if(isNaN(Number(val)))val=0;
+
+slider2.setValue(val);
+
+};
+
+function updateTime() {	
+document.getElementById("sliderlocation").value=video.currentTime.toFixed(1); 
+};
+
+//set the update timer
+setInterval(function () {
+
+if ( video.paused == false ) {
+  updateTime();
+  slider2.setValue(video.currentTime / Math.min(video.duration,video2.duration) * 100.0);
+  }
+  
+}, 1000 / 15);
+
+dhtmlxEvent(window,"load",doLoadLiveDemo);
+
+</script>
+
+
+
+</body>
+</html>
+
